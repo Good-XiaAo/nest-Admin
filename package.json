@@ -1,0 +1,21 @@
+{
+  "name": "kong-dev",
+  "version": "1.0.0",
+  "private": true,
+  "description": "KonG pnpm monorepo",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @kong/web --filter @kong/server dev",
+    "dev:web": "pnpm --filter @kong/web dev",
+    "dev:server": "pnpm --filter @kong/server dev",
+    "build": "pnpm -r run build",
+    "test": "pnpm -r --if-present test",
+    "test:e2e": "pnpm --filter @kong/server test:e2e",
+    "lint": "pnpm -r --if-present lint",
+    "type-check": "pnpm -r --if-present type-check",
+    "format": "pnpm -r --if-present format"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  },
+  "packageManager": "pnpm@10.28.2"
+}
