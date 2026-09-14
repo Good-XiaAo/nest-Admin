@@ -1,15 +1,15 @@
 {
-  "name": "kong-dev",
+  "name": "nest-admin",
   "version": "1.0.0",
   "private": true,
-  "description": "KonG pnpm monorepo",
+  "description": "nest-admin pnpm monorepo",
   "scripts": {
-    "dev": "pnpm --parallel --filter @kong/web --filter @kong/server dev",
-    "dev:web": "pnpm --filter @kong/web dev",
-    "dev:server": "pnpm --filter @kong/server dev",
+    "dev": "pnpm --parallel --filter @nest-admin/web --filter @nest-admin/server dev",
+    "dev:web": "pnpm --filter @nest-admin/web dev",
+    "dev:server": "pnpm --filter @nest-admin/server dev",
     "build": "pnpm -r run build",
     "test": "pnpm -r --if-present test",
-    "test:e2e": "pnpm --filter @kong/server test:e2e",
+    "test:e2e": "pnpm --filter @nest-admin/server test:e2e",
     "lint": "pnpm -r --if-present lint",
     "type-check": "pnpm -r --if-present type-check",
     "format": "pnpm -r --if-present format"
