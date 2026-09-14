@@ -1,4 +1,4 @@
-# KonG Dev
+# nest-Amin
 
 A pnpm workspace containing the Vue web client and NestJS API service.
 
@@ -48,6 +48,6 @@ pnpm format
 Run a command in one workspace package:
 
 ```sh
-pnpm --filter @kong/web build
-pnpm --filter @kong/server test
+pnpm --filter @nest-Amin/web build
+pnpm --filter @nest-Admin/server test
 ```
