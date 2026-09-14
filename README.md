@@ -48,6 +48,6 @@ pnpm format
 Run a command in one workspace package:
 
 ```sh
-pnpm --filter @nest-Amin/web build
-pnpm --filter @nest-Admin/server test
+pnpm --filter @nest-admin/web build
+pnpm --filter @nest-admin/server test
 ```
