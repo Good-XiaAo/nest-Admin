@@ -1,0 +1,39 @@
+@import 'tailwindcss';
+
+/*
+ * 品牌色：同时供 Tailwind 工具类与 Element Plus 主题变量使用，
+ * 保证自写布局和组件库的观感一致（改这里即可全局换肤）。
+ */
+@theme {
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-300: #a5b4fc;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+}
+
+:root {
+  /* Element Plus 默认主色是 #409EFF，这里对齐到上面的品牌色 */
+  --el-color-primary: var(--color-brand-600);
+  --el-color-primary-light-3: var(--color-brand-500);
+  --el-color-primary-light-5: var(--color-brand-300);
+  --el-color-primary-light-7: var(--color-brand-100);
+  --el-color-primary-light-8: var(--color-brand-50);
+  --el-color-primary-light-9: var(--color-brand-50);
+  --el-color-primary-dark-2: var(--color-brand-700);
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    'Inter', 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
