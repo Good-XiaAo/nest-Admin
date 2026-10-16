@@ -29,10 +29,10 @@ export class CreateUserDto {
   )
   password!: string;
   @IsOptional()
-  @IsString({message:'role必须是字符串'})
+  @IsString({ message: 'role必须是字符串' })
   @IsIn(Object.values(UserRole), { message: 'role必须是admin或user' })
   role?: UserRole;
   @IsOptional()
-  @IsBoolean({message:'isActive必须是布尔值'})
+  @IsBoolean({ message: 'isActive必须是布尔值' })
   isActive?: boolean;
 }
