@@ -4,6 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import * as svgCaptcha from 'svg-captcha';
 
 @Injectable()
 export class UserService {
@@ -11,11 +12,23 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
-  async create(createUserDto: CreateUserDto) {
+  async createUser(createUserDto: CreateUserDto) {
     const user = this.userRepository.create(createUserDto);
     const save = await this.userRepository.save(user);
     const { password, ...result } = save;
     return result;
+  }
+
+  createCode(session: Record<string, any>) {
+    const captcha = svgCaptcha.create({
+      size: 4,
+      fontSize: 50,
+      width: 100,
+      height: 40,
+      background: '#cc9966',
+    });
+    session.code = captcha.text;
+    return captcha.data;
   }
 
   findAll() {

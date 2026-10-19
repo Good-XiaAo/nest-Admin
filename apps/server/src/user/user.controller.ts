@@ -7,38 +7,27 @@ import {
   Param,
   Delete,
   Session,
-  Req,
   Res,
 } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as svgCaptcha from 'svg-captcha';
+
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  createUser(@Body() createUserDto: CreateUserDto) {
+    return this.userService.createUser(createUserDto);
   }
   @Get('code')
-  createCode(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Session() session: Record<string, any>,
-  ) {
-    const Captcha = svgCaptcha.create({
-      size: 4,
-      fontSize: 50,
-      width: 100,
-      height: 40,
-      background: '#cc9966',
-    });
-    session.code = Captcha.text;
+  createCode(@Res() res: Response, @Session() session: Record<string, any>) {
+    const code = this.userService.createCode(session);
+    console.log(session);
     res.type('image/svg+xml');
-    res.send(Captcha.data);
+    res.send(code);
   }
 
   @Get()
