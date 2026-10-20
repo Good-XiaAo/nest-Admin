@@ -23,8 +23,8 @@ export class UserService {
     const captcha = svgCaptcha.create({
       size: 4,
       fontSize: 50,
-      width: 100,
-      height: 40,
+      width: 120,
+      height: 38,
       background: '#cc9966',
     });
     session.code = captcha.text;
