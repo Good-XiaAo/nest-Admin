@@ -42,10 +42,11 @@
         ref="formRef"
         :model="form"
         :rules="rules"
+        :disabled="loading"
         size="large"
         label-position="top"
         hide-required-asterisk
-        @submit.prevent
+        @submit.prevent="handleSubmit"
       >
         <el-form-item label="用户名" prop="userName">
           <el-input
@@ -54,7 +55,6 @@
             autocomplete="username"
             clearable
             :prefix-icon="User"
-            @keyup.enter="handleSubmit"
           />
         </el-form-item>
 
@@ -66,25 +66,24 @@
             autocomplete="current-password"
             show-password
             :prefix-icon="Lock"
-            @keyup.enter="handleSubmit"
           />
         </el-form-item>
 
-        <!-- 验证码：输入框占满剩余宽度，图片保持原始宽高比并可点击刷新 -->
-        <el-form-item label="验证码">
+        <el-form-item label="验证码" prop="captcha">
           <div class="flex w-full items-stretch gap-2">
             <el-input
               class="min-w-0 flex-1"
               v-model.trim="form.captcha"
               placeholder="请输入验证码"
               autocomplete="one-time-code"
+              :disabled="loading || !captchaReady"
               clearable
-              @keyup.enter="handleSubmit"
             />
             <button
-              class="h-10 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-0 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-wait disabled:opacity-70"
+              class="h-10 w-32 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-0 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-wait disabled:opacity-70"
               type="button"
-              :disabled="captchaLoading"
+              :disabled="captchaLoading || loading"
+              :aria-busy="captchaLoading"
               aria-label="点击刷新验证码"
               @click="refreshCaptcha"
             >
@@ -92,8 +91,11 @@
                 v-if="captchaUrl"
                 :src="captchaUrl"
                 alt="验证码，点击刷新"
-                class="block h-full w-auto max-w-none object-contain"
+                class="block h-full w-full object-contain"
               />
+              <span v-else class="block px-2 text-sm text-slate-500">
+                {{ captchaLoading ? '加载中...' : '点击刷新' }}
+              </span>
             </button>
           </div>
         </el-form-item>
@@ -105,6 +107,7 @@
             class="text-sm font-medium text-brand-600 transition-colors hover:text-brand-700 hover:underline"
             @click="handleForgotPassword"
           >
+            忘记密码？
           </button>
         </div>
 
@@ -113,21 +116,19 @@
           size="large"
           class="w-full"
           :loading="loading"
+          :disabled="loading || !captchaReady"
           native-type="submit"
-          @click="handleSubmit"
         >
           {{ loading ? '登录中...' : '登 录' }}
         </el-button>
       </el-form>
 
-      <p class="mt-8 text-center text-xs text-slate-400">
-        © 2026 Nest Admin · 仅用于内部管理
-      </p>
+      <p class="mt-8 text-center text-xs text-slate-400">© 2026 Nest Admin · 仅用于内部管理</p>
     </section>
   </div>
 </template>
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { Lock, User } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { getCaptcha } from '@/api/user'
@@ -151,13 +152,17 @@ const form = reactive<LoginForm>({
 
 const captchaUrl = ref('')
 const captchaLoading = ref(false)
+const captchaReady = computed(() => !captchaLoading.value && Boolean(captchaUrl.value))
 let captchaObjectUrl = ''
+let isUnmounted = false
 
-/** 释放上一次的 Blob URL，避免反复刷新时泄漏内存 */
+/** 释放上一次的 Blob URL，并清除已失效的图片。 */
 const revokeCaptchaUrl = () => {
-  if (!captchaObjectUrl) return
-  URL.revokeObjectURL(captchaObjectUrl)
-  captchaObjectUrl = ''
+  if (captchaObjectUrl) {
+    URL.revokeObjectURL(captchaObjectUrl)
+    captchaObjectUrl = ''
+  }
+  captchaUrl.value = ''
 }
 
 /**
@@ -166,24 +171,35 @@ const revokeCaptchaUrl = () => {
  * 验证码文本由服务端写入 session，等登录接口接入时再一起校验。
  */
 const refreshCaptcha = async () => {
-  if (captchaLoading.value) return
+  if (isUnmounted || captchaLoading.value || loading.value) return
   captchaLoading.value = true
   try {
-    const blob = await getCaptcha()
+    // 刷新会替换服务端 session 中的验证码，旧输入和旧图不能继续使用。
+    form.captcha = ''
+    formRef.value?.clearValidate('captcha')
     revokeCaptchaUrl()
+
+    const blob = await getCaptcha()
+    // 请求可能晚于组件卸载完成，此时不能再创建无人释放的 Blob URL。
+    if (isUnmounted) return
+
     captchaObjectUrl = URL.createObjectURL(blob)
     captchaUrl.value = captchaObjectUrl
   } catch {
-    // 错误提示已由 request 拦截器统一处理，这里只清理旧图和加载态
+    if (isUnmounted) return
+    // 错误提示已由 request 拦截器统一处理，保留刷新入口供用户重试。
     revokeCaptchaUrl()
-    captchaUrl.value = ''
   } finally {
-    captchaLoading.value = false
+    if (!isUnmounted) captchaLoading.value = false
   }
+  
 }
 
 onMounted(refreshCaptcha)
-onBeforeUnmount(revokeCaptchaUrl)
+onBeforeUnmount(() => {
+  isUnmounted = true
+  revokeCaptchaUrl()
+})
 
 /*
  * 校验规则只约束「格式是否可能是合法输入」，故意不做密码复杂度校验：
@@ -194,30 +210,36 @@ onBeforeUnmount(revokeCaptchaUrl)
 const rules: FormRules = {
   userName: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 2, max: 6, message: '用户名长度为 2 到 6 位', trigger: 'blur' },
+    { min: 2, max: 32, message: '用户名长度为 2 到 32 位', trigger: 'blur' },
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, max: 20, message: '密码长度为 6 到 20 位', trigger: 'blur' },
   ],
+  captcha: [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { min: 4, max: 4, message: '验证码长度为 4 位', trigger: 'blur' },
+  ],
 }
 
-/** 校验并提交。校验不通过时 validate() 会 reject，这里统一收敛成 false。 */
+/** 先加锁再校验，防重覆盖校验和提交；校验不通过时统一解锁。 */
 const handleSubmit = async () => {
-  if (!formRef.value || loading.value) return
-
-  const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return
+  if (isUnmounted || !formRef.value || loading.value || !captchaReady.value) return
 
   loading.value = true
   try {
+    const valid = await formRef.value.validate().catch(() => false)
+    if (!valid || isUnmounted) return
+
     // 静态页面阶段：后端尚无登录接口（server 端只有 user 的 CRUD，
     // 且没有任何 /auth/login 路由），这里先模拟请求耗时。
     // 接入接口时把这段替换成 request.post('/auth/login', form) 即可。
     await new Promise((resolve) => setTimeout(resolve, 800))
+    if (isUnmounted) return
+
     ElMessage.success('校验通过。登录接口尚未接入，下一轮再补。')
   } finally {
-    loading.value = false
+    if (!isUnmounted) loading.value = false
   }
 }
 
