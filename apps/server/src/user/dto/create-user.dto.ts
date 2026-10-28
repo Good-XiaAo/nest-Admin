@@ -1,17 +1,13 @@
 import { Transform } from 'class-transformer';
 import {
-  IsBoolean,
   IsEmail,
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
   Length,
   Matches,
   MaxLength,
-  ValidateIf,
 } from 'class-validator';
-import { UserRole } from '../entities/user.entity';
 
 export class CreateUserDto {
   @Transform(
@@ -57,13 +53,4 @@ export class CreateUserDto {
   @IsString({ message: '头像必须是字符串' })
   @MaxLength(255, { message: '头像最多为255个字符' })
   avatar?: string | null;
-
-  // 非空字段仅在省略时跳过校验，显式传入 null 必须拒绝。
-  @ValidateIf((_object: CreateUserDto, value: unknown) => value !== undefined)
-  @IsEnum(UserRole, { message: 'role必须是admin或user' })
-  role?: UserRole;
-
-  @ValidateIf((_object: CreateUserDto, value: unknown) => value !== undefined)
-  @IsBoolean({ message: 'isActive必须是布尔值' })
-  isActive?: boolean;
 }

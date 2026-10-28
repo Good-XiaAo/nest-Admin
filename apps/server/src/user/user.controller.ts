@@ -8,6 +8,7 @@ import {
   Delete,
   Session,
   Res,
+  HttpCode,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { UserService } from './user.service';
@@ -17,15 +18,14 @@ import { UpdateUserDto } from './dto/update-user.dto';
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
   @Post()
+  @HttpCode(200)
   createUser(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto);
   }
   @Get('code')
   createCode(@Res() res: Response, @Session() session: Record<string, any>) {
     const code = this.userService.createCode(session);
-    console.log(session);
     res.type('image/svg+xml');
     res.send(code);
   }

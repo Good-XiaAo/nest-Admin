@@ -23,7 +23,7 @@ export class User {
   @Column({ type: 'varchar', length: 32, unique: true, comment: '用户名' })
   userName!: string;
 
-  @Column({ type: 'varchar', length: 255, select: false, comment: '密码' })
+  @Column({ type: 'varchar', length: 255, select: false, comment: '密码哈希' })
   password!: string;
 
   @Column({ type: 'varchar', length: 32, nullable: true, comment: '昵称' })
