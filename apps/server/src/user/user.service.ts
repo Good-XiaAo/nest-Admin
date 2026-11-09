@@ -1,4 +1,9 @@
-import { ConflictException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -99,8 +104,17 @@ export class UserService {
     return `This action returns all user`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(username: string): Promise<User> {
+    const user = await this.userRepository.findOneBy({ userName: username });
+    if (!user) {
+      throw new NotFoundException({
+        statusCode: HttpStatus.NOT_FOUND,
+        error: 'Not Found',
+        code: 'USER_NOT_FOUND',
+        message: '用户不存在',
+      });
+    }
+    return user;
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
